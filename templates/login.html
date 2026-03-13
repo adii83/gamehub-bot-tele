@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GameHub Admin Login</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#f5efe6',
+            ink: '#1f2937',
+            panel: '#fffdf8',
+            accent: '#c2410c',
+            accentSoft: '#fed7aa',
+            line: '#e7dccb'
+          },
+          boxShadow: {
+            float: '0 18px 60px rgba(31, 41, 55, 0.12)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f5efe6_50%,_#efe4d2)] text-ink">
+  <div class="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
+    <div class="grid w-full gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <section class="hidden rounded-[28px] border border-line/70 bg-white/50 p-8 shadow-float backdrop-blur lg:block">
+        <div class="flex h-full flex-col justify-between">
+          <div>
+            <div class="inline-flex items-center rounded-full border border-accent/20 bg-accentSoft px-3 py-1 text-sm font-medium text-accent">
+              Panel Admin GameHub
+            </div>
+            <h1 class="mt-6 max-w-md text-4xl font-black leading-tight">
+              Kelola ticket, build package, dan kirim lisensi lebih cepat.
+            </h1>
+            <p class="mt-4 max-w-lg text-base leading-7 text-slate-600">
+              Login di perangkat ini sekali saja. Session admin disimpan hingga 30 hari, dan browser juga bisa menawarkan simpan password secara otomatis.
+            </p>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div class="rounded-2xl border border-line bg-panel p-4">
+              <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Cepat</p>
+              <p class="mt-2 text-sm font-semibold">Build ticket dan kirim email dari satu dashboard.</p>
+            </div>
+            <div class="rounded-2xl border border-line bg-panel p-4">
+              <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Mobile</p>
+              <p class="mt-2 text-sm font-semibold">Tetap nyaman dipakai dari HP tanpa layout pecah.</p>
+            </div>
+            <div class="rounded-2xl border border-line bg-panel p-4">
+              <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Aman</p>
+              <p class="mt-2 text-sm font-semibold">Sesi admin persisten, tanpa perlu ketik ulang setiap saat.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-[28px] border border-line/80 bg-panel p-5 shadow-float sm:p-8">
+        <div class="mx-auto max-w-md">
+          <div class="mb-8 lg:hidden">
+            <div class="inline-flex items-center rounded-full border border-accent/20 bg-accentSoft px-3 py-1 text-sm font-medium text-accent">
+              Panel Admin GameHub
+            </div>
+            <h1 class="mt-4 text-3xl font-black leading-tight">Masuk untuk mulai membuat ticket.</h1>
+          </div>
+
+          <div class="mb-6">
+            <h2 class="text-2xl font-black sm:text-3xl">Login Admin</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-500">
+              Gunakan browser yang sama agar session tetap tersimpan. Field login juga mendukung fitur simpan password dari browser.
+            </p>
+          </div>
+
+          {% if error %}
+          <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {{ error }}
+          </div>
+          {% endif %}
+
+          <form method="post" action="/admin/login" autocomplete="on" class="space-y-4">
+            <div>
+              <label for="username" class="mb-2 block text-sm font-semibold text-slate-700">Username</label>
+              <input id="username" name="username" autocomplete="username" required class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10" placeholder="admin" />
+            </div>
+
+            <div>
+              <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+              <input id="password" type="password" name="password" autocomplete="current-password" required class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10" placeholder="Masukkan password admin" />
+            </div>
+
+            <div class="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-slate-600">
+              Setelah login, session admin akan tetap aktif hingga 30 hari di perangkat ini kecuali Anda logout manual.
+            </div>
+
+            <button type="submit" class="w-full rounded-2xl bg-ink px-4 py-3 text-base font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+              Masuk ke Dashboard
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

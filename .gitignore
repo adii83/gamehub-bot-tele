@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+builds/*
+!builds/.gitkeep
+temp/*
+!temp/.gitkeep
+logs/*
+!logs/.gitkeep
+gamehub-key.pem

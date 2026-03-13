@@ -1,0 +1,17 @@
+[Unit]
+Description=GameHub Admin + Telegram Bot
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gamehub
+Group=gamehub
+WorkingDirectory=/home/gamehub/_bot_gamehub
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/gamehub/_bot_gamehub/.venv/bin/python /home/gamehub/_bot_gamehub/bot.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

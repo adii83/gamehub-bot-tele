@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GameHub Admin Dashboard</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#f3ede4',
+            ink: '#1f2937',
+            panel: '#fffdf9',
+            accent: '#c2410c',
+            accentSoft: '#ffedd5',
+            line: '#e8dcc8',
+            successSoft: '#dcfce7',
+            successInk: '#166534',
+            warnSoft: '#fef3c7',
+            warnInk: '#92400e'
+          },
+          boxShadow: {
+            float: '0 18px 60px rgba(31, 41, 55, 0.12)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f3ede4_44%,_#ece1cf)] text-ink">
+  <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+    <header class="mb-6 rounded-[28px] border border-line/80 bg-panel/95 p-5 shadow-float backdrop-blur sm:p-7">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div class="inline-flex items-center rounded-full border border-accent/20 bg-accentSoft px-3 py-1 text-sm font-medium text-accent">
+            GameHub Admin Panel
+          </div>
+          <h1 class="mt-4 text-3xl font-black sm:text-4xl">Build ticket dan pantau proses dari satu halaman.</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            Layout ini dibuat agar nyaman dipakai dari HP maupun desktop. Form tetap mudah diisi, log build tetap singkat, dan daftar ticket tetap mudah dibaca.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <div class="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-slate-600">
+            Session login aktif hingga 30 hari
+          </div>
+          <a href="/admin/logout" class="inline-flex items-center justify-center rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+            Logout
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-[24px] border border-line bg-panel p-5 shadow-float">
+        <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Total Ticket</p>
+        <p class="mt-3 text-3xl font-black">{{ tickets|length }}</p>
+      </div>
+      <div class="rounded-[24px] border border-line bg-panel p-5 shadow-float">
+        <p class="text-xs uppercase tracking-[0.24em] text-slate-500">API Aktif</p>
+        <p class="mt-3 text-3xl font-black">{{ apis|length }}</p>
+      </div>
+      <div class="rounded-[24px] border border-line bg-panel p-5 shadow-float">
+        <p class="text-xs uppercase tracking-[0.24em] text-slate-500">READY</p>
+        <p class="mt-3 text-3xl font-black">{{ tickets|selectattr('used', 'equalto', False)|list|length }}</p>
+      </div>
+      <div class="rounded-[24px] border border-line bg-panel p-5 shadow-float">
+        <p class="text-xs uppercase tracking-[0.24em] text-slate-500">USED</p>
+        <p class="mt-3 text-3xl font-black">{{ tickets|selectattr('used', 'equalto', True)|list|length }}</p>
+      </div>
+    </section>
+
+    <main class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section class="rounded-[28px] border border-line/80 bg-panel p-5 shadow-float sm:p-6">
+        <div class="mb-5">
+          <h2 class="text-2xl font-black">Buat Ticket Baru</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-500">Isi kebutuhan build, pilih mode API, lalu kirim ticket ke email user bila diperlukan.</p>
+        </div>
+
+        {% if flash %}
+        <div class="mb-5 rounded-2xl border border-green-200 bg-successSoft px-4 py-3 text-sm font-medium text-successInk">
+          {{ flash }}
+        </div>
+        {% endif %}
+        {% if error %}
+        <div class="mb-5 rounded-2xl border border-amber-200 bg-warnSoft px-4 py-3 text-sm font-medium text-warnInk">
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" action="/admin/tickets/create" class="space-y-5">
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">AppID List</label>
+            <input name="appids" placeholder="1245620,570" required class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10" />
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Bypass</label>
+              <select id="bypass-sel" name="bypass" required class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-semibold text-slate-700">Mode API</label>
+              <select id="api-mode-sel" name="api_mode" required class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10">
+                <option value="auto">Otomatis dari atas ke bawah</option>
+                <option value="manual">Manual pilih satu API</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Isi gamefixer.cfg</label>
+            <input id="bypass-cfg-input" name="bypass_cfg" placeholder="115300,115301" class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400" />
+            <p class="mt-2 text-xs leading-5 text-slate-500">Koma terakhir akan ditambahkan otomatis oleh sistem.</p>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Pilih API Manual</label>
+            <select id="selected-api-sel" name="selected_api" class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
+              <option value="">-- tidak dipilih --</option>
+              {% for api in apis %}
+              <option value="{{ api.name }}">{{ api.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-slate-700">Email User</label>
+            <input type="email" name="customer_email" placeholder="user@email.com" class="w-full rounded-2xl border border-line bg-white px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10" />
+            <p class="mt-2 text-xs leading-5 text-slate-500">Opsional. Jika diisi, ticket akan langsung dikirim via email otomatis.</p>
+          </div>
+
+          <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-ink px-4 py-3 text-base font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 sm:w-auto sm:min-w-56">
+            Build dan Buat Ticket
+          </button>
+        </form>
+      </section>
+
+      <section class="space-y-6">
+        <div class="rounded-[28px] border border-line/80 bg-panel p-5 shadow-float sm:p-6">
+          <h2 class="text-xl font-black">API Aktif</h2>
+          <div class="mt-4 grid gap-3">
+            {% for api in apis %}
+            <div class="rounded-2xl border border-line bg-white px-4 py-3">
+              <p class="font-semibold text-slate-800">{{ loop.index }}. {{ api.name }}</p>
+              <p class="mt-1 break-all text-xs leading-5 text-slate-500">{{ api.url }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if build_logs %}
+        <div class="rounded-[28px] border border-line/80 bg-panel p-5 shadow-float sm:p-6">
+          <h2 class="text-xl font-black">Ringkasan Proses Build Terakhir</h2>
+          <div class="mt-4 space-y-3">
+            {% for line in build_logs %}
+            <div class="rounded-2xl border border-line bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+              {{ line }}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+    </main>
+
+    <section class="mt-6 rounded-[28px] border border-line/80 bg-panel p-5 shadow-float sm:p-6">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-black">Ticket Terbaru</h2>
+          <p class="mt-1 text-sm text-slate-500">Tampilan tabel untuk desktop dan kartu ringkas untuk mobile.</p>
+        </div>
+      </div>
+
+      <div class="hidden overflow-x-auto lg:block">
+        <table class="min-w-full divide-y divide-line text-sm">
+          <thead>
+            <tr class="text-left text-slate-500">
+              <th class="px-4 py-3 font-semibold">Code</th>
+              <th class="px-4 py-3 font-semibold">AppID</th>
+              <th class="px-4 py-3 font-semibold">Bypass</th>
+              <th class="px-4 py-3 font-semibold">API</th>
+              <th class="px-4 py-3 font-semibold">Status</th>
+              <th class="px-4 py-3 font-semibold">Dibuat</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line">
+            {% for t in tickets %}
+            <tr class="bg-white/70">
+              <td class="px-4 py-4 font-semibold text-slate-800">{{ t.ticket_code }}</td>
+              <td class="px-4 py-4 text-slate-600">{{ t.appid_list }}</td>
+              <td class="px-4 py-4 text-slate-600">{{ 'Yes' if t.bypass else 'No' }}</td>
+              <td class="px-4 py-4 text-slate-600">{{ t.api_mode }}{% if t.selected_api %} ({{ t.selected_api }}){% endif %}</td>
+              <td class="px-4 py-4">
+                {% if t.used %}
+                <span class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">USED</span>
+                {% else %}
+                <span class="rounded-full bg-successSoft px-3 py-1 text-xs font-semibold text-successInk">READY</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-4 text-slate-600">{{ t.created_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid gap-4 lg:hidden">
+        {% for t in tickets %}
+        <article class="rounded-2xl border border-line bg-white p-4 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm text-slate-500">Code</p>
+              <p class="text-base font-bold text-slate-800 break-all">{{ t.ticket_code }}</p>
+            </div>
+            {% if t.used %}
+            <span class="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">USED</span>
+            {% else %}
+            <span class="rounded-full bg-successSoft px-3 py-1 text-xs font-semibold text-successInk">READY</span>
+            {% endif %}
+          </div>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">AppID</p>
+              <p class="mt-1 text-sm text-slate-700 break-all">{{ t.appid_list }}</p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Bypass</p>
+              <p class="mt-1 text-sm text-slate-700">{{ 'Yes' if t.bypass else 'No' }}</p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">API</p>
+              <p class="mt-1 text-sm text-slate-700">{{ t.api_mode }}{% if t.selected_api %} ({{ t.selected_api }}){% endif %}</p>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Dibuat</p>
+              <p class="mt-1 text-sm text-slate-700">{{ t.created_at }}</p>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var bypassSel   = document.getElementById('bypass-sel');
+      var apiModeSel  = document.getElementById('api-mode-sel');
+      var cfgInput    = document.getElementById('bypass-cfg-input');
+      var apiSel      = document.getElementById('selected-api-sel');
+
+      function syncBypass() {
+        var isBypass = bypassSel.value === 'true';
+        cfgInput.disabled = !isBypass;
+        if (!isBypass) cfgInput.value = '';
+      }
+
+      function syncApiMode() {
+        var isManual = apiModeSel.value === 'manual';
+        apiSel.disabled = !isManual;
+        if (!isManual) apiSel.value = '';
+      }
+
+      bypassSel.addEventListener('change', syncBypass);
+      apiModeSel.addEventListener('change', syncApiMode);
+
+      // jalankan saat halaman pertama kali dimuat
+      syncBypass();
+      syncApiMode();
+    })();
+  </script>
+</body>
+</html>
