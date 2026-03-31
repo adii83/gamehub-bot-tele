@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message, Update
@@ -82,6 +83,7 @@ email_service = EmailService(settings)
 
 bot = Bot(
     token=settings.bot_token,
+    session=AiohttpSession(timeout=120),
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
 dp = Dispatcher()
