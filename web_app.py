@@ -11,7 +11,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from aiogram.types import FSInputFile, Message, Update
+from aiogram.types import Message, Update, BufferedInputFile
 from urllib.parse import quote, unquote
 
 from fastapi import FastAPI, Form, Request
@@ -120,19 +120,39 @@ async def on_any_text(message: Message) -> None:
     await message.answer("⚠️ PERHATIAN: File akan otomatis terhapus dalam 24 Jam")
 
     if ticket.bypass:
+        first_appid = ticket.appid_list.split(",", 1)[0].strip()
+        game_name = f"APPID {first_appid}" if first_appid else "ini"
+        if first_appid:
+            try:
+                game_name = await downloader.fetch_game_name(first_appid)
+            except Exception as exc:
+                logger.warning(
+                    "Gagal mengambil nama game untuk bypass appid=%s error=%s",
+                    first_appid,
+                    exc,
+                )
         await message.answer(
-            "⚠️ PERHATIAN: Game Membutuhkan Bypass Untuk bisa dijalankan. "
+            f"⚠️ PERHATIAN: Game {game_name} Membutuhkan Bypass Untuk bisa dijalankan. "
             "Setelah Game Berhasil Diinstall Harap tonton video Tutorial Bypass Game Dibawah."
         )
 
-    links_text = [f"Link tutorial Add Game:\n{settings.add_game_tutorial_url}"]
+    links_text = [f"Link Tutorial Add Game:\n{settings.add_game_tutorial_url}"]
     if ticket.bypass:
-        links_text.append(f"Link tutorial Bypass Game:\n{settings.bypass_tutorial_url}")
+        links_text.append(f"Link Tutorial Bypass Game:\n{settings.bypass_tutorial_url}")
     await message.answer("\n\n".join(links_text))
 
     try:
-        document = FSInputFile(ticket.file_path, filename="GameHub.zip")
-        sent = await message.answer_document(document=document, caption="Silahkan download Setup Tersebut")
+        # Read file into memory first to avoid flaky disk/stream transport issues.
+        with open(ticket.file_path, "rb") as f:
+            file_data = f.read()
+
+        document = BufferedInputFile(file_data, filename="GameHub.zip")
+
+        sent = await message.answer_document(
+            document=document,
+            caption="Silahkan download Setup Tersebut\n\nPassword File: gamehub",
+        )
+
         await ticket_service.set_delivery_message(
             ticket_code=ticket.ticket_code,
             chat_id=message.chat.id,

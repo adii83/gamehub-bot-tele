@@ -7,13 +7,6 @@
             "enabled": true
         },
         {
-            "name": "Sadie",
-            "url": "http://167.235.229.108/m/<appid>",
-            "success_code": 200,
-            "unavailable_code": 404,
-            "enabled": true
-        },
-        {
             "name": "Ryuu",
             "url": "http://167.235.229.108/<appid>",
             "success_code": 200,
@@ -23,6 +16,13 @@
         {
             "name": "TwentyTwo Cloud",
             "url": "http://masss.pythonanywhere.com/storage?auth=IEOIJE54esfsipoE56GE4&appid=<appid>",
+            "success_code": 200,
+            "unavailable_code": 404,
+            "enabled": true
+        },
+                {
+            "name": "Sadie",
+            "url": "http://167.235.229.108/m/<appid>",
             "success_code": 200,
             "unavailable_code": 404,
             "enabled": true

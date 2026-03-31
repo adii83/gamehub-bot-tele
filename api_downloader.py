@@ -22,7 +22,7 @@ class ApiDownloader:
     def __init__(self, timeout_seconds: int = 15) -> None:
         self._timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
-    async def fetch_sanitized_game_name(self, appid: str) -> str:
+    async def fetch_game_name(self, appid: str) -> str:
         url = f"https://store.steampowered.com/api/appdetails?appids={appid}&l=english&cc=us"
         async with aiohttp.ClientSession(timeout=self._timeout) as session:
             async with session.get(url) as response:
@@ -31,7 +31,10 @@ class ApiDownloader:
 
                 payload = await response.json(content_type=None)
 
-        raw_name = self._extract_steam_app_name(payload, appid)
+        return self._extract_steam_app_name(payload, appid)
+
+    async def fetch_sanitized_game_name(self, appid: str) -> str:
+        raw_name = await self.fetch_game_name(appid)
         sanitized_name = self._sanitize_game_name(raw_name)
         if not sanitized_name:
             raise DownloadError(f"Nama game untuk appid={appid} kosong setelah sanitasi")
