@@ -123,7 +123,7 @@ def load_settings() -> Settings:
         smtp_username=os.getenv("SMTP_USERNAME", "").strip(),
         smtp_password=os.getenv("SMTP_PASSWORD", "").strip(),
         smtp_from_email=os.getenv("SMTP_FROM_EMAIL", "").strip(),
-        smtp_from_name=os.getenv("SMTP_FROM_NAME", "GameHub Pluss").strip(),
+        smtp_from_name=os.getenv("SMTP_FROM_NAME", "NexaPlay").strip(),
         smtp_use_tls=os.getenv("SMTP_USE_TLS", "true").strip().lower() == "true",
         api_json_path=base_dir / "api.json",
         base_dir=base_dir,

@@ -41,7 +41,7 @@ class PackageBuilder:
     ) -> BuildResult:
         ticket_dir = self.settings.builds_dir / ticket_code
         temp_ticket_dir = self.settings.temp_dir / ticket_code
-        output_zip = ticket_dir / "GameHub.zip"
+        output_zip = ticket_dir / "NexaPlay.zip"
         build_logs: list[str] = []
 
         if ticket_dir.exists():
@@ -96,7 +96,7 @@ class PackageBuilder:
                     build_logs.append("Peringatan: File panduan tidak ditemukan dan tidak diikutkan")
 
             logger.info("Build sukses ticket=%s output=%s", ticket_code, output_zip)
-            build_logs.append("GameHub.zip final berhasil dibuat")
+            build_logs.append("NexaPlay.zip final berhasil dibuat")
             return BuildResult(output_zip=output_zip, logs=build_logs)
         except Exception as exc:
             logger.exception("Build gagal ticket=%s error=%s", ticket_code, exc)

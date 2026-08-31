@@ -10,6 +10,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramNetworkError
 from aiogram.filters import Command
 from aiogram.types import Message, Update, BufferedInputFile
 from urllib.parse import quote, unquote
@@ -51,6 +52,16 @@ def _normalize_appids(raw: str) -> list[str]:
     return appids
 
 
+def _extract_bypass_appids(bypass_cfg: str | None, appid_list: str) -> list[str]:
+    preferred = [x.strip() for x in (bypass_cfg or "").split(",") if x.strip()]
+    preferred_numeric = [x for x in preferred if x.isdigit()]
+    if preferred_numeric:
+        return preferred_numeric
+
+    fallback = [x.strip() for x in appid_list.split(",") if x.strip()]
+    return [x for x in fallback if x.isdigit()]
+
+
 def _is_logged_in(request: Request) -> bool:
     return bool(request.session.get("is_admin"))
 
@@ -64,7 +75,7 @@ ensure_directories(settings)
 setup_logging(settings.log_level)
 logger = logging.getLogger("web_app")
 
-app = FastAPI(title="GameHub Admin + Bot")
+app = FastAPI(title="NexaPlay Admin + Bot")
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret,
@@ -83,14 +94,14 @@ email_service = EmailService(settings)
 
 bot = Bot(
     token=settings.bot_token,
-    session=AiohttpSession(timeout=120),
+    session=AiohttpSession(timeout=300),
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
 )
 dp = Dispatcher()
 
 
 WELCOME_MESSAGE = (
-    "🎉 Terima kasih telah berbelanja di GameHub!\n\n"
+    "🎉 Terima kasih telah berbelanja di NexaPlay!\n\n"
     "Silakan kirimkan kodenya di sini.\n\n"
     "📌 Cara mengirim:\n"
     "1. Buka email Anda.\n"
@@ -99,6 +110,25 @@ WELCOME_MESSAGE = (
     "⚠️ Penting:\n"
     "Jangan lupa tonton tutorialnya sampai selesai agar proses berjalan lancar dan tidak terjadi error."
 )
+
+BONUS_CLAIM_MESSAGE = (
+    "<b>Syarat Klaim Bonus</b>\n"
+    "✅ Pesanan berstatus <b>Diterima</b>\n"
+    "✅ Beri <b>ulasan + follow toko + rating 5⭐</b>\n\n"
+    "Dukungan Kakak sangat membantu toko kami berkembang. 🙏\n\n"
+    "<b>Cara klaim:</b>\n"
+    "Kirim <b>screenshot bukti</b> + <b>request game</b> ke shopee.\n"
+    "Tim kami akan proses bonusnya. 🎁\n\n"
+    "<b>Catatan:</b>\n"
+    "• Request game bebas, kecuali game dari <b>EA, Ubisoft, Rockstar</b>, dan game Steam berlabel <b>Denuvo</b>\n"
+    '<a href="https://drive.google.com/file/d/1AxUUoBEIqX5bXxgGHb00Ka7TSbM2Uqkc/view?usp=sharing">Tekan teks ini untuk Cara Cek Label Game.</a>\n'
+    "• Bisa juga pilih game dari <b>etalase</b> namun:\n"
+    "• Maksimal harga bonus menyesuaikan <b>harga produk yang dibeli</b>\n\n"
+    "Terima kasih banyak! 🙌"
+)
+
+DOCUMENT_SEND_TIMEOUT = 300
+DOCUMENT_SEND_MAX_ATTEMPTS = 2
 
 
 @dp.message(Command("start"))
@@ -120,19 +150,26 @@ async def on_any_text(message: Message) -> None:
     await message.answer("⚠️ PERHATIAN: File akan otomatis terhapus dalam 24 Jam")
 
     if ticket.bypass:
-        first_appid = ticket.appid_list.split(",", 1)[0].strip()
-        game_name = f"APPID {first_appid}" if first_appid else "ini"
-        if first_appid:
+        bypass_appids = _extract_bypass_appids(ticket.bypass_cfg, ticket.appid_list)
+        game_lines: list[str] = []
+        for appid in bypass_appids:
+            game_name = f"APPID {appid}"
             try:
-                game_name = await downloader.fetch_game_name(first_appid)
+                game_name = await downloader.fetch_game_name(appid)
             except Exception as exc:
                 logger.warning(
                     "Gagal mengambil nama game untuk bypass appid=%s error=%s",
-                    first_appid,
+                    appid,
                     exc,
                 )
+            game_lines.append(f"- {game_name}")
+
+        if not game_lines:
+            game_lines.append("- ini")
+        games_text = "\n".join(game_lines)
+
         await message.answer(
-            f"⚠️ PERHATIAN: Game {game_name} Membutuhkan Bypass Untuk bisa dijalankan. "
+            f"⚠️ PERHATIAN:\nGame:\n{games_text}\nMembutuhkan Bypass Untuk bisa dijalankan. "
             "Setelah Game Berhasil Diinstall Harap tonton video Tutorial Bypass Game Dibawah."
         )
 
@@ -141,17 +178,46 @@ async def on_any_text(message: Message) -> None:
         links_text.append(f"Link Tutorial Bypass Game:\n{settings.bypass_tutorial_url}")
     await message.answer("\n\n".join(links_text))
 
+    sending_notice = await message.answer("Sedang mengirim setup. Mohon tunggu sebentar...")
+
     try:
         # Read file into memory first to avoid flaky disk/stream transport issues.
         with open(ticket.file_path, "rb") as f:
             file_data = f.read()
 
-        document = BufferedInputFile(file_data, filename="GameHub.zip")
+        sent = None
+        last_send_error: Exception | None = None
+        for attempt in range(1, DOCUMENT_SEND_MAX_ATTEMPTS + 1):
+            try:
+                document = BufferedInputFile(file_data, filename="NexaPlay.zip")
+                sent = await message.answer_document(
+                    document=document,
+                    caption="Silakan unduh setup NexaPlay tersebut.",
+                    request_timeout=DOCUMENT_SEND_TIMEOUT,
+                )
+                break
+            except TelegramNetworkError as exc:
+                last_send_error = exc
+                logger.warning(
+                    "Upload file timeout/jaringan ticket=%s attempt=%s/%s error=%s",
+                    ticket.ticket_code,
+                    attempt,
+                    DOCUMENT_SEND_MAX_ATTEMPTS,
+                    exc,
+                )
+                if attempt >= DOCUMENT_SEND_MAX_ATTEMPTS:
+                    raise
+                with suppress(Exception):
+                    await sending_notice.edit_text(
+                        "Pengiriman setup sedikit terkendala jaringan. Sedang mencoba lagi, mohon tunggu sebentar..."
+                    )
+                await asyncio.sleep(2)
 
-        sent = await message.answer_document(
-            document=document,
-            caption="Silahkan download Setup Tersebut\n\nPassword File: gamehub",
-        )
+        if sent is None:
+            raise last_send_error or RuntimeError("Pengiriman file gagal tanpa detail error")
+
+        with suppress(Exception):
+            await sending_notice.delete()
 
         await ticket_service.set_delivery_message(
             ticket_code=ticket.ticket_code,
@@ -159,9 +225,14 @@ async def on_any_text(message: Message) -> None:
             message_id=sent.message_id,
         )
         await ticket_service.finalize_redeem(ticket.ticket_code)
+        await message.answer(BONUS_CLAIM_MESSAGE)
     except FileNotFoundError:
+        with suppress(Exception):
+            await sending_notice.delete()
         await message.answer("File untuk ticket ini tidak ditemukan. Hubungi admin.")
     except Exception as exc:
+        with suppress(Exception):
+            await sending_notice.delete()
         logger.exception("Gagal kirim file ticket=%s error=%s", ticket.ticket_code, exc)
         await message.answer("Terjadi error saat mengirim file. Coba lagi nanti.")
 

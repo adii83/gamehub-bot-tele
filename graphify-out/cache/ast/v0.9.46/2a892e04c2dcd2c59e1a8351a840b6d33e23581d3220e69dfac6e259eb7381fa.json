@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_bot_py", "label": "bot.py", "file_type": "code", "source_file": "bot.py", "source_location": "L1"}], "edges": [{"source": "$graphify-root$_bot_py", "target": "uvicorn", "relation": "imports", "context": "import", "confidence": "EXTRACTED", "source_file": "bot.py", "source_location": "L3", "weight": 1.0}], "raw_calls": []}

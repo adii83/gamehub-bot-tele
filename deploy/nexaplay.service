@@ -1,0 +1,17 @@
+[Unit]
+Description=NexaPlay Admin + Telegram Bot
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nexaplay
+Group=nexaplay
+WorkingDirectory=/home/nexaplay/_bot_nexaplay
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/nexaplay/_bot_nexaplay/.venv/bin/python /home/nexaplay/_bot_nexaplay/bot.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -9,3 +9,7 @@ temp/*
 logs/*
 !logs/.gitkeep
 gamehub-key.pem
+api.json
+
+
+.claude/worktrees/

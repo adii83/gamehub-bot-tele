@@ -1,9 +1,9 @@
-# Telegram GameHub Bot (VPS Mode)
+# Telegram NexaPlay Bot (VPS Mode)
 
 Sistem ini menjalankan:
 - Bot Telegram user (redeem ticket) via webhook
 - Admin web panel (buat ticket + pilih API + bypass config)
-- Build GameHub.zip per-ticket
+- Build NexaPlay.zip per-ticket
 - Auto hapus pesan file Telegram setelah 24 jam
 
 ## Arsitektur VPS
@@ -125,7 +125,7 @@ http://127.0.0.1:8000/admin/login
   - `manual` -> pakai 1 API yang dipilih
 - Bypass edit `gamefixer.cfg` otomatis tambah koma terakhir
 - Nama file bypass dan add game mengikuti nama asli file sumber
-- Selalu include `BACA INI JIKA GAME GAK BISA MUNCUL.txt` ke `GameHub.zip`
+- Selalu include `BACA INI JIKA GAME GAK BISA MUNCUL.txt` ke `NexaPlay.zip`
 - Urutan pesan user saat redeem:
   1. Peringatan auto-hapus 24 jam
   2. Peringatan bypass (jika diperlukan)
