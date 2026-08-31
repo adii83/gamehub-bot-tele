@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import html
-import smtplib
-from email.message import EmailMessage
-from email.utils import formatdate, make_msgid
+
+import resend
 
 from config import Settings
 
@@ -13,34 +12,23 @@ class EmailService:
         self.settings = settings
 
     def is_configured(self) -> bool:
-        return all(
-            [
-                self.settings.smtp_host,
-                self.settings.smtp_username,
-                self.settings.smtp_password,
-                self.settings.smtp_from_email,
-                self.settings.bot_link,
-            ]
-        )
+        return bool(self.settings.resend_api_key and self.settings.bot_link)
 
     def send_ticket_email(self, recipient_email: str, ticket_code: str) -> None:
         if not self.is_configured():
-            raise ValueError("SMTP atau BOT_LINK belum lengkap di .env")
+            raise ValueError("RESEND_API_KEY atau BOT_LINK belum lengkap di .env")
 
-        message = EmailMessage()
-        message["Subject"] = "Pesanan NexaPlay Anda Siap 🎉"
-        message["From"] = f"{self.settings.smtp_from_name} <{self.settings.smtp_from_email}>"
-        message["To"] = recipient_email
-        message["Date"] = formatdate(localtime=True)
-        message["Message-ID"] = make_msgid(domain=self.settings.smtp_from_email.rpartition("@")[2] or None)
-        message.set_content(self._build_body(ticket_code))
-        message.add_alternative(self._build_html(ticket_code), subtype="html")
-
-        with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=30) as server:
-            if self.settings.smtp_use_tls:
-                server.starttls()
-            server.login(self.settings.smtp_username, self.settings.smtp_password)
-            server.send_message(message)
+        resend.api_key = self.settings.resend_api_key
+        resend.Emails.send(
+            {
+                "from": "NexaPlay <order@nexaplayid.store>",
+                "reply_to": "nexaplayid@gmail.com",
+                "to": [recipient_email],
+                "subject": "Pesanan NexaPlay Anda Siap 🎉",
+                "text": self._build_body(ticket_code),
+                "html": self._build_html(ticket_code),
+            }
+        )
 
     def _build_body(self, ticket_code: str) -> str:
         return (
@@ -55,7 +43,12 @@ class EmailService:
             "3. Ikuti tutorial yang dikirim bot sampai selesai.\n\n"
             "Gabung Discord NexaPlay:\n"
             "https://discord.gg/x4kmK3JMm\n\n"
-            "PENTING: Ikuti tutorial sampai tuntas agar proses instalasi berjalan lancar.\n\n"
+            "🎮 UPDATE GAME TERBARU\n"
+            "Lihat informasi dan update game terbaru NexaPlay melalui website resmi kami:\n"
+            "https://nexaplayid.store\n\n"
+            "📌 PENTING: Ikuti tutorial sampai tuntas agar proses instalasi berjalan lancar.\n\n"
+            "🛟 BUTUH BANTUAN?\n"
+            "Jika mengalami kendala, silakan hubungi admin Shopee NexaPlay secara langsung.\n\n"
             "Salam hangat,\n"
             "Tim NexaPlay\n"
         )
@@ -99,7 +92,11 @@ class EmailService:
                 <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#4b5563;">Gabung Discord NexaPlay untuk memperoleh informasi terbaru.</p>
                 <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:26px;"><tr><td style="background:#4f46e5;border-radius:8px;"><a href="{discord_link}" style="display:inline-block;padding:12px 18px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;">Gabung Discord</a></td></tr></table>
 
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><tr><td style="padding:15px;font-size:12px;line-height:1.6;color:#92400e;"><strong>📌 Penting</strong><br>Ikuti tutorial sampai tuntas agar proses instalasi dan penggunaan berjalan lancar.</td></tr></table>
+                <h2 style="margin:0 0 8px;font-size:16px;">🎮 Update Game Terbaru</h2>
+                <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#4b5563;">Lihat informasi dan update game terbaru NexaPlay melalui website resmi kami.</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:26px;"><tr><td style="background:#7c3aed;border-radius:8px;"><a href="https://nexaplayid.store" style="display:inline-block;padding:12px 18px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;">Kunjungi NexaPlay</a></td></tr></table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><tr><td style="padding:15px;font-size:12px;line-height:1.6;color:#92400e;"><strong>📌 Penting</strong><br>Ikuti tutorial sampai tuntas agar proses instalasi dan penggunaan berjalan lancar.<div style="margin-top:12px;padding-top:12px;border-top:1px solid #fcd34d;"><strong>🛟 Butuh Bantuan?</strong><br>Jika mengalami kendala, silakan hubungi admin Shopee NexaPlay secara langsung.</div></td></tr></table>
 
                 <p style="margin:28px 0 0;font-size:13px;line-height:1.7;color:#4b5563;">Semoga pengalaman gaming Anda bersama NexaPlay makin menyenangkan!</p>
                 <p style="margin:16px 0 0;font-size:13px;line-height:1.6;">Salam hangat,<br><strong>Tim NexaPlay</strong><br><span style="color:#7c3aed;">Game Your Way</span></p>

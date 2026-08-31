@@ -409,8 +409,18 @@ async def admin_create_ticket(
 
         email_status = None
         if customer_email.strip():
-            email_service.send_ticket_email(customer_email.strip(), result.ticket_code)
-            email_status = f" Ticket juga berhasil dikirim ke email: {customer_email.strip()}"
+            recipient_email = customer_email.strip()
+            try:
+                email_service.send_ticket_email(recipient_email, result.ticket_code)
+                email_status = f" Ticket juga berhasil dikirim ke email: {recipient_email}"
+            except Exception as exc:
+                logger.exception(
+                    "Ticket berhasil dibuat tetapi email gagal dikirim ticket=%s recipient=%s error=%s",
+                    result.ticket_code,
+                    recipient_email,
+                    exc,
+                )
+                email_status = f" Email gagal dikirim ke {recipient_email}; ticket tetap berhasil dibuat."
 
         flash = f"Ticket berhasil dibuat: {result.ticket_code}"
         if email_status:

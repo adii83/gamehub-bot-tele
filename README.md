@@ -74,9 +74,24 @@ Server akan berjalan di port `8000`.
 - `ADD_GAME_TUTORIAL_URL`: link tutorial Add Game YouTube/halaman Anda
 - `BYPASS_TUTORIAL_URL`: link tutorial bypass
 - `BOT_LINK`: link bot Telegram Anda, contoh `https://t.me/nama_bot_anda`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`: isi jika ingin kirim ticket otomatis via email dari admin web
+- `RESEND_API_KEY`: API key Resend untuk kirim ticket otomatis dari `NexaPlay <order@nexaplayid.store>`; simpan hanya di `.env`
 - `ADD_GAME_FILENAME`: nama file exe asli di folder `tools`
 - `BYPASS_TEMPLATE_FILENAME`: nama file zip bypass asli di folder `bypass`
+
+## Setup Email Resend
+
+1. Tambahkan domain `nexaplayid.store` di dashboard Resend.
+2. Salin record SPF dan DKIM yang diberikan Resend ke Hostinger DNS Zone Editor tanpa mengubah nama atau nilainya.
+3. Pastikan tidak ada dua record SPF pada hostname yang sama. Jika sudah ada, gabungkan sesuai petunjuk Resend.
+4. Tambahkan record DMARC awal:
+   - Type: `TXT`
+   - Name: `_dmarc`
+   - Value: `v=DMARC1; p=none; adkim=r; aspf=r;`
+5. Tunggu status domain di Resend menjadi `Verified`.
+6. Buat API key Resend, lalu isi `RESEND_API_KEY` di `.env` VPS. Jangan commit `.env`.
+7. Kirim email uji ke Gmail dan cek **Tampilkan versi asli**. Pastikan SPF, DKIM, dan DMARC berstatus `PASS`.
+
+Semua email otomatis memakai `NexaPlay <order@nexaplayid.store>`. Balasan customer diarahkan ke `nexaplayid@gmail.com` melalui header `Reply-To`.
 
 ## Testing Lokal
 

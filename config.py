@@ -26,13 +26,7 @@ class Settings:
     add_game_tutorial_url: str
     bypass_tutorial_url: str
     bot_link: str
-    smtp_host: str
-    smtp_port: int
-    smtp_username: str
-    smtp_password: str
-    smtp_from_email: str
-    smtp_from_name: str
-    smtp_use_tls: bool
+    resend_api_key: str
     api_json_path: Path
     base_dir: Path
     tools_dir: Path
@@ -118,13 +112,7 @@ def load_settings() -> Settings:
         add_game_tutorial_url=os.getenv("ADD_GAME_TUTORIAL_URL", "").strip(),
         bypass_tutorial_url=os.getenv("BYPASS_TUTORIAL_URL", "").strip(),
         bot_link=os.getenv("BOT_LINK", "").strip(),
-        smtp_host=os.getenv("SMTP_HOST", "").strip(),
-        smtp_port=int(os.getenv("SMTP_PORT", "587")),
-        smtp_username=os.getenv("SMTP_USERNAME", "").strip(),
-        smtp_password=os.getenv("SMTP_PASSWORD", "").strip(),
-        smtp_from_email=os.getenv("SMTP_FROM_EMAIL", "").strip(),
-        smtp_from_name=os.getenv("SMTP_FROM_NAME", "NexaPlay").strip(),
-        smtp_use_tls=os.getenv("SMTP_USE_TLS", "true").strip().lower() == "true",
+        resend_api_key=os.getenv("RESEND_API_KEY", "").strip(),
         api_json_path=base_dir / "api.json",
         base_dir=base_dir,
         tools_dir=tools_dir,
