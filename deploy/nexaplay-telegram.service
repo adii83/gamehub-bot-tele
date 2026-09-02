@@ -7,9 +7,9 @@ Wants=network-online.target
 Type=simple
 User=nexaplay
 Group=nexaplay
-WorkingDirectory=/home/nexaplay/_bot_nexaplay
+WorkingDirectory=/home/nexaplay/telegram_bot_nexaplay
 Environment=PYTHONUNBUFFERED=1
-ExecStart=/home/nexaplay/_bot_nexaplay/.venv/bin/python /home/nexaplay/_bot_nexaplay/bot.py
+ExecStart=/home/nexaplay/telegram_bot_nexaplay/.venv/bin/python /home/nexaplay/telegram_bot_nexaplay/bot.py
 Restart=always
 RestartSec=3
 

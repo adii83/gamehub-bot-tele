@@ -11,5 +11,6 @@ logs/*
 gamehub-key.pem
 api.json
 
+.env.local
 
 .claude/worktrees/
